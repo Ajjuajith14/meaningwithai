@@ -16,9 +16,6 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
-      buildSettings:
-        commands: []
-        baseDirectory: /
       customHeaders:
         - pattern: '**/*'
           headers:
@@ -44,10 +41,3 @@ applications:
           headers:
             - key: 'Content-Type'
               value: 'text/plain'
-    appRoot: /
-    environment:
-      variables:
-        AMPLIFY_MONOREPO_APP_ROOT: /
-        AMPLIFY_DIFF_DEPLOY: false
-        AMPLIFY_DIFF_DEPLOY_ROOT: /
-        NODE_ENV: production

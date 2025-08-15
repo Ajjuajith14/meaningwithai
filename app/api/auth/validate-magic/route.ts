@@ -1,8 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
+import { createServerClient, isSupabaseConfigured } from "@/lib/supabase"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({ error: "Authentication service not available" }, { status: 503 })
+    }
+
     const { token } = await request.json()
 
     if (!token) {

@@ -21,6 +21,9 @@ export async function generateWordDefinition(
   imagePrompt: string
 }> {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("Missing OPENAI_API_KEY in environment variables")
+    }
     const prompt = `You are an expert educational AI assistant creating richly detailed learning cards for children and teens ages 6–18. For the word "${word}," follow these instructions precisely to ensure maximum clarity, factual accuracy, and pedagogical value:
 
 1. **Word & Pronunciation**

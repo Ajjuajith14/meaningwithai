@@ -1,29 +1,52 @@
-import { OpenAI } from "openai"
+import { OpenAI } from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+let openaiConfigured: boolean | null = null;
+
+export function isOpenAIConfigured(): boolean {
+  if (openaiConfigured === null) {
+    openaiConfigured = !!process.env.OPENAI_API_KEY;
+  }
+  return openaiConfigured;
+}
+
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI | null {
+  if (!isOpenAIConfigured()) {
+    return null;
+  }
+
+  if (!openaiClient) {
+    openaiClient = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+
+  return openaiClient;
+}
 
 export async function generateWordDefinition(
   word: string,
   definition: string,
-  parseError: string | null = null,
-  responseType = "friendly",
+  responseType = "friendly"
 ): Promise<{
-  word: string
-  pronunciation: string
-  partOfSpeech: string
-  definition: string
-  trueMeaningNote: string
-  simpleExplanation: string
-  realWorldScenario: string
-  examples: string[]
-  imagePrompt: string
+  word: string;
+  pronunciation: string;
+  partOfSpeech: string;
+  definition: string;
+  trueMeaningNote: string;
+  simpleExplanation: string;
+  realWorldScenario: string;
+  examples: string[];
+  imagePrompt: string;
 }> {
   try {
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error("Missing OPENAI_API_KEY in environment variables")
+    const client = getOpenAIClient();
+
+    if (!client) {
+      throw new Error("OpenAI client not available - API key missing");
     }
+
     const prompt = `You are an expert educational AI assistant creating richly detailed learning cards for children and teens ages 6–18. For the word "${word}," follow these instructions precisely to ensure maximum clarity, factual accuracy, and pedagogical value:
 
 1. **Word & Pronunciation**
@@ -48,13 +71,12 @@ export async function generateWordDefinition(
 7. **Usage Examples** (2 sentences)
    - Provide two distinct, realistic sentences demonstrating correct use of the word in context.
 
-8. **Image Prompt** (2–3 sentences)
-   - Create a richly detailed, cartoon-style description for an image-generation API. Include:
-   - Characters or objects ("a curious teen holding…")
-   - The environment ("in a bright science lab with…" or "on a sunny playground with…")
-   - Color/style cues ("soft pastels, bold outlines, playful expressions")
-   - Key actions or mood ("excited discovery, dynamic interaction")
-   - Any symbolic elements that clearly convey the word's concept
+8. **Image Prompt**
+   - Based directly on the definition: "${definition}".
+   - Create a vivid, cartoon-style scene that clearly illustrates this meaning.
+   - Include: characters or objects, environment, colors/style cues, and key actions or mood.
+   - Ensure the scene makes the abstract meaning easy to understand for children.
+
 
 IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, backticks, or any other formatting. Just return the raw JSON object:
 
@@ -73,9 +95,9 @@ IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, ba
   "imagePrompt": "Detailed cartoon-style scene description here."
 }
 
-Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`.trim()
+Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`;
 
-    const completion = await openai.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -90,36 +112,32 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       ],
       temperature: 0.7,
       max_tokens: 800,
-    })
+    });
 
-    const response = completion.choices[0]?.message?.content
+    const response = completion.choices[0]?.message?.content;
     if (!response) {
-      throw new Error("No response from OpenAI")
+      throw new Error("No response from OpenAI");
     }
 
-    // Clean the response to extract JSON from markdown code blocks
-    let cleanedResponse = response.trim()
+    let cleanedResponse = response.trim();
 
-    // Remove markdown code block markers if present
-    if (cleanedResponse.startsWith('\`\`\`json')) {
-      cleanedResponse = cleanedResponse.replace(/^\`\`\`json\s*/, '').replace(/\s*\`\`\`$/, '')
-    } else if (cleanedResponse.startsWith('\`\`\`')) {
-      cleanedResponse = cleanedResponse.replace(/^\`\`\`\s*/, '').replace(/\s*\`\`\`$/, '')
+    if (cleanedResponse.startsWith("```json")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
+    } else if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
     }
 
-    // Additional cleanup for any remaining backticks or formatting
-    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, '').trim()
+    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim();
 
-    console.log("🤖 OpenAI raw response:", response.substring(0, 200) + "...")
-    console.log("🧹 Cleaned response:", cleanedResponse.substring(0, 200) + "...")
-
-    let parsed
+    let parsed;
     try {
-      parsed = JSON.parse(cleanedResponse)
+      parsed = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      console.error("❌ JSON Parse Error:", parseError)
-      console.error("❌ Problematic response:", cleanedResponse)
-      throw new Error(`Failed to parse OpenAI response: ${parseError}`)
+      throw new Error(`Failed to parse OpenAI response: ${parseError}`);
     }
 
     return {
@@ -132,10 +150,8 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       realWorldScenario: parsed.realWorldScenario,
       examples: parsed.examples || [],
       imagePrompt: parsed.imagePrompt,
-    }
+    };
   } catch (error) {
-    console.error("OpenAI API error:", error)
-    // Fallback response
     return {
       word,
       pronunciation: `/${word}/`,
@@ -148,7 +164,7 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
         `I learned something new about ${word} today.`,
         `The ${word} was very interesting to discover.`,
       ],
-      imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${definition}" in a bright, colorful scene, with dynamic poses and expressive faces.`,
-    }
+      imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene, with dynamic poses and expressive faces.`,
+    };
   }
 }

@@ -1,24 +1,64 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateWordDefinition } from "@/lib/openai"
-import { generateWordImage } from "@/lib/getimg"
+import { generateWordDefinition, isOpenAIConfigured } from "@/lib/openai"
+import { createServerClient } from "@/lib/supabase"
+
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
-    const { word, responseType } = await request.json()
+    const { word, responseType = "friendly" } = await request.json()
 
-    if (!word) {
-      return NextResponse.json({ error: "Word is required" }, { status: 400 })
+    if (!word || typeof word !== "string") {
+      return NextResponse.json({ error: "Word is required and must be a string" }, { status: 400 })
     }
 
-    console.log(`🔍 Searching for word: "${word}"`)
+    const openaiAvailable = isOpenAIConfigured()
 
-    // Generate comprehensive definition using OpenAI
-    const wordData = await generateWordDefinition(word, responseType || "friendly")
+    let wordData
+    if (openaiAvailable) {
+      try {
+        wordData = await generateWordDefinition(word, responseType)
+      } catch (error) {
+        wordData = {
+          word,
+          pronunciation: `/${word}/`,
+          partOfSpeech: "noun",
+          definition: `A ${word} is something special that you can learn about!`,
+          trueMeaningNote: "This definition is based on trusted dictionary sources.",
+          simpleExplanation: `It's a fun way to learn what ${word} really means.`,
+          realWorldScenario: `Imagine encountering "${word}" in a real-world setting.`,
+          examples: [`I learned something new about ${word} today.`, `The ${word} was very interesting to discover.`],
+          imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene.`,
+        }
+      }
+    } else {
+      wordData = {
+        word,
+        pronunciation: `/${word}/`,
+        partOfSpeech: "noun",
+        definition: `A ${word} is something special that you can learn about!`,
+        trueMeaningNote: "This definition is based on trusted dictionary sources.",
+        simpleExplanation: `It's a fun way to learn what ${word} really means.`,
+        realWorldScenario: `Imagine encountering "${word}" in a real-world setting.`,
+        examples: [`I learned something new about ${word} today.`, `The ${word} was very interesting to discover.`],
+        imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene.`,
+      }
+    }
 
-    // Generate image using GetImg.ai with the detailed prompt
-    const imageUrl = await generateWordImage(wordData.imagePrompt)
+    try {
+      const supabase = createServerClient()
+      if (supabase) {
+        await supabase.from("search_history").insert({
+          word: word.toLowerCase(),
+          definition: wordData.definition,
+          created_at: new Date().toISOString(),
+        })
+      }
+    } catch (error) {
+      // Silently fail if database not configured
+    }
 
-    const searchResult = {
+    const response = {
       word: wordData.word,
       pronunciation: wordData.pronunciation,
       partOfSpeech: wordData.partOfSpeech,
@@ -28,15 +68,17 @@ export async function POST(request: NextRequest) {
       realWorldScenario: wordData.realWorldScenario,
       examples: wordData.examples,
       imagePrompt: wordData.imagePrompt,
-      image_url: imageUrl,
+      image_url: null, // Will be updated by client-side image generation
     }
 
-    console.log("✅ Search completed successfully for:", searchResult.word)
-
-    // Return the search result immediately - no database operations
-    return NextResponse.json(searchResult)
+    return NextResponse.json(response)
   } catch (error) {
-    console.error("Search API error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to process search request",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

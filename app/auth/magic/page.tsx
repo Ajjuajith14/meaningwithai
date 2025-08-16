@@ -25,7 +25,7 @@ export default function MagicLinkPage() {
       }
 
       try {
-        console.log("🔗 Validating magic link token:", token)
+        // console.log("🔗 Validating magic link token:", token)
 
         // Validate the magic link token
         const { data: userId, error: validationError } = await supabase.rpc("validate_magic_link_token", {

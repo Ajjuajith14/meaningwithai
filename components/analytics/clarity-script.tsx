@@ -16,7 +16,7 @@ export function ClarityScript() {
     // Initialize Clarity when component mounts
     if (typeof window !== "undefined" && clarityProjectId) {
       // Clarity will be loaded by the Script component
-      console.log("Microsoft Clarity initialized with project ID:", clarityProjectId)
+      // console.log("Microsoft Clarity initialized with project ID:", clarityProjectId)
     }
   }, [clarityProjectId])
 

@@ -1,74 +1,75 @@
-const GETIMG_KEY = process.env.GETIMG_API_KEY
-const GETIMG_URL = "https://api.getimg.ai/v1/stable-diffusion-xl/text-to-image"
-const MODEL_ID = "real-cartoon-xl-v6"
+let getImgConfigured: boolean | null = null
 
-// Default negative prompts to avoid unwanted content
-const NEGATIVE_PROMPT = ["dark", "scary", "violent", "inappropriate", "complex", "realistic", "adult content"].join(
-  ", ",
-)
-
-/**
- * Generate a colorful, child-friendly cartoon image from a detailed prompt via getimg.ai.
- *
-//  * imagePrompt - A richly detailed, cartoon-style prompt describing
- *                      characters, scene, colors, style cues, and action.
- * @returns A data URL string (base64 PNG) or a placeholder URL.
- */
-export async function generateWordImage(imagePrompt: string): Promise<string> {
-  if (!GETIMG_KEY) {
-    console.log("⚠️ GetImg API key not found, using placeholder")
-    return placeholderURL(imagePrompt)
+export function isGetImgConfigured(): boolean {
+  if (getImgConfigured === null) {
+    getImgConfigured = !!process.env.GETIMG_API_KEY
   }
+  return getImgConfigured
+}
 
-  const payload = {
-    model: MODEL_ID,
-    prompt: imagePrompt,
-    negative_prompt: NEGATIVE_PROMPT,
-    negative_prompt_2: NEGATIVE_PROMPT,
-    width: 512,
-    height: 512,
-    steps: 25,
-    guidance: 7.5,
-    response_format: "b64",
-    samples: 1,
-  }
-
+export async function generateImage(imagePrompt: string): Promise<string> {
   try {
-    console.log("🎨 Generating image with GetImg.ai for prompt:", imagePrompt.substring(0, 100) + "...")
+    if (!isGetImgConfigured()) {
+      const encodedPrompt = encodeURIComponent(imagePrompt.substring(0, 100))
+      return `/placeholder.svg?height=400&width=600&text=${encodedPrompt}`
+    }
 
-    const response = await fetch(GETIMG_URL, {
+    const response = await fetch("https://api.getimg.ai/v1/stable-diffusion/text-to-image", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GETIMG_KEY}`,
+        Authorization: `Bearer ${process.env.GETIMG_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        prompt: `${imagePrompt}, cartoon style, educational illustration, bright colors, child-friendly, high quality, digital art`,
+        model: "stable-diffusion-v1-5",
+        width: 512,
+        height: 512,
+        steps: 25,
+        guidance: 7.5,
+        seed: Math.floor(Math.random() * 1000000),
+        scheduler: "dpmsolver++",
+        output_format: "jpeg",
+      }),
     })
-
-    console.log("📡 GetImg.ai API Response Status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error("❌ GetImg.ai API Error:", response.status, errorText)
-      return placeholderURL(imagePrompt)
+      throw new Error(`GetImg API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    const base64 = Array.isArray(data.images) ? data.images[0] : data.image || ""
 
-    if (!base64) {
-      console.error("❌ No image data received from GetImg.ai")
-      return placeholderURL(imagePrompt)
+    let imageUrl = null
+
+    if (data.url) {
+      imageUrl = data.url
+    } else if (data.image) {
+      if (data.image.startsWith("data:")) {
+        imageUrl = data.image
+      } else {
+        imageUrl = `data:image/jpeg;base64,${data.image}`
+      }
+    } else if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+      const firstImage = data.images[0]
+      if (typeof firstImage === "string") {
+        if (firstImage.startsWith("data:")) {
+          imageUrl = firstImage
+        } else {
+          imageUrl = `data:image/jpeg;base64,${firstImage}`
+        }
+      } else if (firstImage.url) {
+        imageUrl = firstImage.url
+      }
     }
 
-    console.log("✅ Image generated successfully with GetImg.ai")
-    return base64.startsWith("data:") ? base64 : `data:image/png;base64,${base64}`
-  } catch (error) {
-    console.error("❌ GetImg.ai Inference error:", error)
-    return placeholderURL(imagePrompt)
-  }
-}
+    if (!imageUrl) {
+      throw new Error("No image data found in GetImg response")
+    }
 
-function placeholderURL(text: string) {
-  return `/placeholder.svg?height=512&width=512&text=${encodeURIComponent(text.substring(0, 50))}`
+    return imageUrl
+  } catch (error) {
+    const encodedPrompt = encodeURIComponent(imagePrompt.substring(0, 100))
+    return `/placeholder.svg?height=400&width=600&text=${encodedPrompt}`
+  }
 }

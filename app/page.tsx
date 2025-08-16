@@ -12,7 +12,19 @@ import { TrialCounter } from "@/components/trial-counter"
 import { UpgradeModal } from "@/components/upgrade-modal"
 import { Navbar } from "@/components/navbar"
 import { useAuth } from "@/lib/auth-context"
-import { Brain, Palette, Zap, ArrowRight, BookOpen, Users, Star, GraduationCap, Award, Heart } from 'lucide-react'
+import {
+  Brain,
+  Palette,
+  Zap,
+  ArrowRight,
+  BookOpen,
+  Users,
+  Star,
+  GraduationCap,
+  Award,
+  Heart,
+  AlertCircle,
+} from "lucide-react"
 import { toast } from "sonner"
 import type { WordResponse } from "@/lib/types"
 import { FeedbackModal } from "@/components/feedback-modal"
@@ -21,8 +33,9 @@ export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [searchResult, setSearchResult] = useState<WordResponse | null>(null)
   const [loading, setLoading] = useState(false)
+  const [imageLoading, setImageLoading] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, refreshProfile, error: authError } = useAuth()
   const [showFeedbackModal, setShowFeedbackModal] = useState(false)
 
   useEffect(() => {
@@ -30,44 +43,72 @@ export default function HomePage() {
     return () => clearTimeout(timer)
   }, [])
 
-
-const handleSearch = async (word: string, responseType: string = "friendly") => {
+  const handleSearch = async (word: string, responseType = "friendly") => {
     setLoading(true)
+    setImageLoading(true)
     setSearchResult(null)
 
     try {
-      const response = await fetch("/api/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          word,
-          responseType,
+      // Start both API calls in parallel
+      const [searchResponse, imageResponse] = await Promise.allSettled([
+        fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ word, responseType }),
         }),
-      })
+        // We'll generate the image after we get the search result
+        Promise.resolve(null),
+      ])
 
-      const result = await response.json()
+      if (searchResponse.status === "fulfilled" && searchResponse.value.ok) {
+        const result = await searchResponse.value.json()
 
-      if (!response.ok) {
-        throw new Error(result.error || "Search failed")
+        // Show the word definition immediately
+        setSearchResult(result)
+        setLoading(false)
+
+        toast.success(`Found definition for "${word}"!`, {
+          description: "Creating your visual... 🎨",
+        })
+
+        // Now generate the image asynchronously
+        if (result.imagePrompt) {
+          try {
+            const imageResponse = await fetch("/api/generate-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                prompt: result.imagePrompt,
+                word: word,
+              }),
+
+
+            })
+            if (imageResponse.ok) {
+              const imageData = await imageResponse.json()
+              // Update the result with the generated image
+              setSearchResult((prev) => (prev ? { ...prev, image_url: imageData.image_url } : null))
+              toast.success("Visual masterpiece ready! 🎨✨")
+            }
+          } catch (imageError) {
+            // Image generation failed, but we still have the definition
+            toast.info("Definition ready! Visual couldn't be generated this time.")
+          } finally {
+            setImageLoading(false)
+          }
+        } else {
+          setImageLoading(false)
+        }
+      } else {
+        throw new Error("Search failed")
       }
-
-      // Set the search result immediately
-      setSearchResult(result)
-
-      toast.success(`Found definition for "${word}"!`, {
-        description: "Scroll down to see your detailed learning card ✨",
-      })
     } catch (error: any) {
-      // console.error("Search error:", error)
       toast.error("Search failed", {
         description: error.message || "Please try again later",
       })
-    
       setSearchResult(null)
-    } finally {
       setLoading(false)
+      setImageLoading(false)
     }
   }
 
@@ -100,11 +141,27 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
     }
   }
 
-  const canSearch = !loading
+  const showConfigError = authError && authError.includes("Supabase")
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <Navbar />
+
+      {showConfigError && (
+        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+          <div className="container mx-auto">
+            <div className="flex items-center gap-2 text-yellow-800">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Database not configured - some features may be limited.{" "}
+                <Link href="/debug" className="underline hover:no-underline">
+                  Check configuration
+                </Link>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className={`transition-all duration-1000 ${isLoaded ? "animate-fade-in" : "opacity-0"}`}>
         <div className="container mx-auto px-4 py-16">
@@ -129,7 +186,6 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
                 that make learning fun and comprehensive for children.
               </p>
 
-              {/* Educational Trust Indicators */}
               <div className="flex justify-center items-center gap-6 text-sm text-gray-500 font-playful">
                 <div className="flex items-center gap-1">
                   <GraduationCap className="w-4 h-4 text-blue-500" />
@@ -146,23 +202,19 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
               </div>
             </div>
 
-            {/* Search Section */}
             <div className="space-y-6 max-w-4xl mx-auto">
               <SearchBar onSearch={handleSearch} loading={loading} />
-
               <div className="flex justify-center">
                 <TrialCounter />
               </div>
             </div>
 
-            {/* Search Result */}
             {(loading || searchResult) && (
               <div className="mt-12">
-                <WordResult result={searchResult!} loading={loading} />
+                <WordResult result={searchResult} loading={loading} imageLoading={imageLoading} />
               </div>
             )}
 
-            {/* Daily Word */}
             <div className="mt-12 flex justify-center">
               <DailyWord />
             </div>
@@ -257,14 +309,12 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
           </div>
         </section>
 
-        {/* Educational Trust & Quality Section
+        {/* Educational Trust & Quality Section */}
         <section className="py-16 bg-white/50">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold font-playful text-gray-800 mb-4">
-                  Trusted Educational Content 📖
-                </h2>
+                <h2 className="text-3xl font-bold font-playful text-gray-800 mb-4">Trusted Educational Content 📖</h2>
                 <p className="text-lg text-gray-600 font-playful">
                   Quality learning materials designed by education experts
                 </p>
@@ -297,14 +347,16 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
               </div>
             </div>
           </div>
-        </section> */}
+        </section>
 
         {/* Why Kids Love Section */}
         <section className="py-16">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold font-playful text-gray-800 mb-4">Why Students Love Learning Here 🤔</h2>
+                <h2 className="text-3xl font-bold font-playful text-gray-800 mb-4">
+                  Why Students Love Learning Here 🤔
+                </h2>
                 <p className="text-lg text-gray-600 font-playful">Making vocabulary building fun and effective!</p>
               </div>
 
@@ -426,10 +478,7 @@ const handleSearch = async (word: string, responseType: string = "friendly") => 
       </footer>
 
       <UpgradeModal open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} onUpgrade={handleUpgrade} />
-      <FeedbackModal 
-        open={showFeedbackModal} 
-        onClose={() => setShowFeedbackModal(false)} 
-      />
+      <FeedbackModal open={showFeedbackModal} onClose={() => setShowFeedbackModal(false)} />
     </div>
   )
 }

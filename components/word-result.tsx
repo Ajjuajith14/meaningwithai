@@ -88,9 +88,7 @@ export function WordResult({
         {/* Header with Word and Pronunciation */}
         <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 sm:p-8">
           <div className="flex items-center justify-center gap-3 sm:gap-4">
-            <h2
-              className="font-bold font-playful capitalize text-[clamp(2rem,6vw,3.5rem)]"
-            >
+            <h2 className="font-bold font-playful capitalize text-[clamp(2rem,6vw,3.5rem)]">
               {result.word}
             </h2>
             {result.pronunciation && (
@@ -128,7 +126,13 @@ export function WordResult({
             {/* Image Section */}
             <div className="space-y-4 sm:space-y-6 md:m-8">
               <div className="relative rounded-2xl overflow-hidden shadow-lg border-4 border-yellow-200 min-h-[300px] sm:min-h-[400px]">
-                {showImageLoading && <ImageLoadingAnimation />}
+                {showImageLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24">
+                      <ImageLoadingAnimation />
+                    </div>
+                  </div>
+                )}
                 {imageError && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
                     <div className="text-center p-4 sm:p-6">

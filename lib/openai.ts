@@ -1,22 +1,22 @@
-import { OpenAI } from "openai"
+import { OpenAI } from "openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
-})
+});
 
 export async function generateWordDefinition(
   word: string,
-  responseType = "friendly",
+  responseType = "friendly"
 ): Promise<{
-  word: string
-  pronunciation: string
-  partOfSpeech: string
-  definition: string
-  trueMeaningNote: string
-  simpleExplanation: string
-  realWorldScenario: string
-  examples: string[]
-  imagePrompt: string
+  word: string;
+  pronunciation: string;
+  partOfSpeech: string;
+  definition: string;
+  trueMeaningNote: string;
+  simpleExplanation: string;
+  realWorldScenario: string;
+  examples: string[];
+  imagePrompt: string;
 }> {
   try {
     const prompt = `You are an expert educational AI assistant creating richly detailed learning cards for children and teens ages 6–18. For the word "${word}," follow these instructions precisely to ensure maximum clarity, factual accuracy, and pedagogical value:
@@ -68,7 +68,7 @@ IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, ba
   "imagePrompt": "Detailed cartoon-style scene description here."
 }
 
-Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`
+Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
@@ -85,28 +85,32 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       ],
       temperature: 0.7,
       max_tokens: 800,
-    })
+    });
 
-    const response = completion.choices[0]?.message?.content
+    const response = completion.choices[0]?.message?.content;
     if (!response) {
-      throw new Error("No response from OpenAI")
+      throw new Error("No response from OpenAI");
     }
 
-    let cleanedResponse = response.trim()
+    let cleanedResponse = response.trim();
 
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "")
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "")
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
     }
 
-    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim()
+    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim();
 
-    let parsed
+    let parsed;
     try {
-      parsed = JSON.parse(cleanedResponse)
+      parsed = JSON.parse(cleanedResponse);
     } catch (parseError) {
-      throw new Error(`Failed to parse OpenAI response: ${parseError}`)
+      throw new Error(`Failed to parse OpenAI response: ${parseError}`);
     }
 
     return {
@@ -119,8 +123,8 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       realWorldScenario: parsed.realWorldScenario,
       examples: parsed.examples || [],
       imagePrompt: parsed.imagePrompt,
-    }
+    };
   } catch (error) {
-    throw error // Let the calling function handle the fallback
+    throw error; // Let the calling function handle the fallback
   }
 }

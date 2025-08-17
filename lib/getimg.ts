@@ -1,14 +1,20 @@
-const GETIMG_KEY = process.env.GETIMG_API_KEY
-const GETIMG_URL = "https://api.getimg.ai/v1/stable-diffusion-xl/text-to-image"
-const MODEL_ID = "real-cartoon-xl-v6"
+const GETIMG_KEY = process.env.GETIMG_API_KEY;
+const GETIMG_URL = "https://api.getimg.ai/v1/stable-diffusion-xl/text-to-image";
+const MODEL_ID = "real-cartoon-xl-v6";
 
-const NEGATIVE_PROMPT = ["dark", "scary", "violent", "inappropriate", "complex", "realistic", "adult content"].join(
-  ", ",
-)
+const NEGATIVE_PROMPT = [
+  "dark",
+  "scary",
+  "violent",
+  "inappropriate",
+  "complex",
+  "realistic",
+  "adult content",
+].join(", ");
 
 export async function generateImage(imagePrompt: string): Promise<string> {
   if (!GETIMG_KEY) {
-    return placeholderURL(imagePrompt)
+    return placeholderURL(imagePrompt);
   }
 
   const payload = {
@@ -21,7 +27,7 @@ export async function generateImage(imagePrompt: string): Promise<string> {
     guidance: 7.5,
     response_format: "b64",
     samples: 1,
-  }
+  };
 
   try {
     const response = await fetch(GETIMG_URL, {
@@ -31,40 +37,50 @@ export async function generateImage(imagePrompt: string): Promise<string> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    })
+    });
 
     if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`GetImg API error: ${response.status} - ${errorText}`)
+      const errorText = await response.text();
+      throw new Error(`GetImg API error: ${response.status} - ${errorText}`);
     }
 
-    const data = await response.json()
+    const data = await response.json();
 
-    let imageUrl = ""
+    let imageUrl = "";
 
     if (data.url) {
-      imageUrl = data.url
+      imageUrl = data.url;
     } else if (data.image) {
-      imageUrl = data.image.startsWith("data:") ? data.image : `data:image/png;base64,${data.image}`
-    } else if (data.images && Array.isArray(data.images) && data.images.length > 0) {
-      const firstImage = data.images[0]
+      imageUrl = data.image.startsWith("data:")
+        ? data.image
+        : `data:image/png;base64,${data.image}`;
+    } else if (
+      data.images &&
+      Array.isArray(data.images) &&
+      data.images.length > 0
+    ) {
+      const firstImage = data.images[0];
       if (typeof firstImage === "string") {
-        imageUrl = firstImage.startsWith("data:") ? firstImage : `data:image/png;base64,${firstImage}`
+        imageUrl = firstImage.startsWith("data:")
+          ? firstImage
+          : `data:image/png;base64,${firstImage}`;
       } else if (firstImage.url) {
-        imageUrl = firstImage.url
+        imageUrl = firstImage.url;
       }
     }
 
     if (!imageUrl) {
-      throw new Error("No image data received from GetImg.ai")
+      throw new Error("No image data received from GetImg.ai");
     }
 
-    return imageUrl
+    return imageUrl;
   } catch (error) {
-    return placeholderURL(imagePrompt)
+    return placeholderURL(imagePrompt);
   }
 }
 
 function placeholderURL(text: string) {
-  return `/placeholder.svg?height=512&width=512&text=${encodeURIComponent(text.substring(0, 50))}`
+  return `/placeholder.svg?height=512&width=512&text=${encodeURIComponent(
+    text.substring(0, 50)
+  )}`;
 }

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 const loadingMessages = [
   { text: "Creating magic for you", emoji: "✨", color: "text-blue-600" },
@@ -8,36 +8,52 @@ const loadingMessages = [
   { text: "Painting your picture", emoji: "🎨", color: "text-pink-600" },
   { text: "Crafting perfect examples", emoji: "💡", color: "text-yellow-600" },
   { text: "Adding pronunciation magic", emoji: "🔊", color: "text-green-600" },
-  { text: "Polishing your learning card", emoji: "⭐", color: "text-orange-600" },
+  {
+    text: "Polishing your learning card",
+    emoji: "⭐",
+    color: "text-orange-600",
+  },
   { text: "Almost ready to learn", emoji: "🚀", color: "text-red-600" },
-  { text: "Final touches of brilliance", emoji: "🌟", color: "text-indigo-600" },
-]
+  {
+    text: "Final touches of brilliance",
+    emoji: "🌟",
+    color: "text-indigo-600",
+  },
+];
 
 export function LoadingMessages() {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isVisible, setIsVisible] = useState(true)
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIsVisible(false)
+      setIsVisible(false);
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % loadingMessages.length)
-        setIsVisible(true)
-      }, 200)
-    }, 2000)
+        setCurrentIndex((prev) => (prev + 1) % loadingMessages.length);
+        setIsVisible(true);
+      }, 200);
+    }, 2000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
-  const currentMessage = loadingMessages[currentIndex]
+  const currentMessage = loadingMessages[currentIndex];
 
   return (
     <div className="text-center space-y-6">
       <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto" />
 
-      <div className={`transition-opacity duration-200 ${isVisible ? "opacity-100" : "opacity-0"}`}>
-        <p className={`text-2xl font-playful ${currentMessage.color} flex items-center justify-center gap-3`}>
-          <span className="text-3xl animate-bounce">{currentMessage.emoji}</span>
+      <div
+        className={`transition-opacity duration-200 ${
+          isVisible ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <p
+          className={`text-2xl font-playful ${currentMessage.color} flex items-center justify-center gap-3`}
+        >
+          <span className="text-3xl animate-bounce">
+            {currentMessage.emoji}
+          </span>
           {currentMessage.text}
         </p>
       </div>
@@ -53,5 +69,5 @@ export function LoadingMessages() {
         ))}
       </div>
     </div>
-  )
+  );
 }

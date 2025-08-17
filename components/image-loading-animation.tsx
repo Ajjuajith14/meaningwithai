@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
 
 const loadingMessages = [
   { icon: "🎨", text: "Mixing colors..." },
@@ -8,7 +8,7 @@ const loadingMessages = [
   { icon: "✨", text: "Adding magic touches..." },
   { icon: "🪄", text: "Creating visual story..." },
   { icon: "📸", text: "Capturing the moment..." },
-]
+];
 
 const funFacts = [
   "💡 Did you know? Our AI considers colors, shapes, and context to create the perfect visual representation!",
@@ -16,26 +16,26 @@ const funFacts = [
   "🌈 Amazing! The AI analyzes thousands of artistic styles to create your perfect learning visual!",
   "🎪 Cool! Our AI artist thinks about lighting, composition, and mood for each illustration!",
   "🎯 Neat! The AI ensures every image is educational, colorful, and perfectly child-friendly!",
-]
+];
 
 export function ImageLoadingAnimation() {
-  const [currentMessage, setCurrentMessage] = useState(0)
-  const [currentFact, setCurrentFact] = useState(0)
+  const [currentMessage, setCurrentMessage] = useState(0);
+  const [currentFact, setCurrentFact] = useState(0);
 
   useEffect(() => {
     const messageInterval = setInterval(() => {
-      setCurrentMessage((prev) => (prev + 1) % loadingMessages.length)
-    }, 2000)
+      setCurrentMessage((prev) => (prev + 1) % loadingMessages.length);
+    }, 2000);
 
     const factInterval = setInterval(() => {
-      setCurrentFact((prev) => (prev + 1) % funFacts.length)
-    }, 4000)
+      setCurrentFact((prev) => (prev + 1) % funFacts.length);
+    }, 4000);
 
     return () => {
-      clearInterval(messageInterval)
-      clearInterval(factInterval)
-    }
-  }, [])
+      clearInterval(messageInterval);
+      clearInterval(factInterval);
+    };
+  }, []);
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 p-4 sm:p-6">
@@ -68,7 +68,9 @@ export function ImageLoadingAnimation() {
           <div
             key={dot}
             className={`w-2 sm:w-3 h-2 sm:h-3 rounded-full transition-all duration-500 ${
-              dot === currentMessage % 4 ? "bg-blue-500 scale-125" : "bg-gray-300"
+              dot === currentMessage % 4
+                ? "bg-blue-500 scale-125"
+                : "bg-gray-300"
             }`}
           />
         ))}
@@ -86,5 +88,5 @@ export function ImageLoadingAnimation() {
         </p>
       </div>
     </div>
-  )
+  );
 }

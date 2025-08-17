@@ -2,7 +2,7 @@
 let Resend: any = null
 
 try {
-  if (process.env.RESEND_API_KEY) {
+  if (typeof window === "undefined" && process.env.RESEND_API_KEY) {
     const resendModule = require("resend")
     Resend = resendModule.Resend
   }
@@ -14,8 +14,14 @@ export class EmailService {
   private resend: any = null
 
   constructor() {
-    if (Resend && process.env.RESEND_API_KEY) {
-      this.resend = new Resend(process.env.RESEND_API_KEY)
+    // Only initialize Resend if we have the API key and we're on server side
+    if (typeof window === "undefined" && Resend && process.env.RESEND_API_KEY) {
+      try {
+        this.resend = new Resend(process.env.RESEND_API_KEY)
+      } catch (error) {
+        console.log("⚠️ Failed to initialize Resend:", error)
+        this.resend = null
+      }
     }
   }
 

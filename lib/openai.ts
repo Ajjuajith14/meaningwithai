@@ -1,23 +1,55 @@
-import { OpenAI } from "openai";
+import { OpenAI } from "openai"
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+let openaiClient: OpenAI | null = null
+let isConfigured: boolean | null = null
+
+function getOpenAIClient(): OpenAI | null {
+  if (isConfigured === null) {
+    isConfigured = !!process.env.OPENAI_API_KEY
+    console.log("🔑 OpenAI API Key configured:", isConfigured ? "Yes" : "No")
+  }
+
+  if (!isConfigured) {
+    return null
+  }
+
+  if (!openaiClient) {
+    try {
+      openaiClient = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY!,
+      })
+      console.log("✅ OpenAI client initialized successfully")
+    } catch (error) {
+      console.error("❌ Failed to initialize OpenAI client:", error)
+      return null
+    }
+  }
+
+  return openaiClient
+}
 
 export async function generateWordDefinition(
   word: string,
-  responseType = "friendly"
+  responseType = "friendly",
 ): Promise<{
-  word: string;
-  pronunciation: string;
-  partOfSpeech: string;
-  definition: string;
-  trueMeaningNote: string;
-  simpleExplanation: string;
-  realWorldScenario: string;
-  examples: string[];
-  imagePrompt: string;
+  word: string
+  pronunciation: string
+  partOfSpeech: string
+  definition: string
+  trueMeaningNote: string
+  simpleExplanation: string
+  realWorldScenario: string
+  examples: string[]
+  imagePrompt: string
 }> {
+  console.log(`🤖 Generating definition for word: "${word}"`)
+
+  const client = getOpenAIClient()
+  if (!client) {
+    console.warn("⚠️ OpenAI client not available, using fallback")
+    throw new Error("OpenAI not configured")
+  }
+
   try {
     const prompt = `You are an expert educational AI assistant creating richly detailed learning cards for children and teens ages 6–18. For the word "${word}," follow these instructions precisely to ensure maximum clarity, factual accuracy, and pedagogical value:
 
@@ -68,9 +100,11 @@ IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, ba
   "imagePrompt": "Detailed cartoon-style scene description here."
 }
 
-Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`;
+Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`
 
-    const completion = await openai.chat.completions.create({
+    console.log("📡 Making OpenAI API request...")
+
+    const completion = await client.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -85,32 +119,33 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       ],
       temperature: 0.7,
       max_tokens: 800,
-    });
+    })
 
-    const response = completion.choices[0]?.message?.content;
+    const response = completion.choices[0]?.message?.content
     if (!response) {
-      throw new Error("No response from OpenAI");
+      throw new Error("No response from OpenAI")
     }
 
-    let cleanedResponse = response.trim();
+    console.log("✅ OpenAI response received, parsing...")
+
+    let cleanedResponse = response.trim()
 
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```json\s*/, "")
-        .replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "")
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "")
     }
 
-    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim();
+    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim()
 
-    let parsed;
+    let parsed
     try {
-      parsed = JSON.parse(cleanedResponse);
+      parsed = JSON.parse(cleanedResponse)
+      console.log("✅ Successfully parsed OpenAI response")
     } catch (parseError) {
-      throw new Error(`Failed to parse OpenAI response: ${parseError}`);
+      console.error("❌ Failed to parse OpenAI response:", parseError)
+      console.error("Raw response:", response.substring(0, 500))
+      throw new Error(`Failed to parse OpenAI response: ${parseError}`)
     }
 
     return {
@@ -123,8 +158,9 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       realWorldScenario: parsed.realWorldScenario,
       examples: parsed.examples || [],
       imagePrompt: parsed.imagePrompt,
-    };
+    }
   } catch (error) {
-    throw error; // Let the calling function handle the fallback
+    console.error("❌ OpenAI API error:", error)
+    throw error // Let the calling function handle the fallback
   }
 }

@@ -1,32 +1,51 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { generateImage } from "@/lib/getimg";
+import { type NextRequest, NextResponse } from "next/server"
+import { generateWordImage } from "@/lib/getimg"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
-  try {
-    const { prompt, word } = await request.json();
+  console.log("🖼️ Generate Image API called")
 
-    if (!prompt || typeof prompt !== "string") {
+  try {
+    const body = await request.json()
+    console.log("📦 Request body:", JSON.stringify(body, null, 2))
+
+    const { imagePrompt, prompt, word } = body
+
+    // Handle both possible parameter names
+    const finalPrompt = imagePrompt || prompt
+    console.log("🎨 Final prompt:", finalPrompt?.substring(0, 100) + "...")
+
+    if (!finalPrompt || typeof finalPrompt !== "string") {
+      console.error("❌ Invalid prompt parameter. Received:", { imagePrompt, prompt, word })
       return NextResponse.json(
-        { error: "Prompt is required and must be a string" },
-        { status: 400 }
-      );
+        {
+          error: "Image prompt is required and must be a string",
+          received: { imagePrompt, prompt, word },
+        },
+        { status: 400 },
+      )
     }
 
-    const imageUrl = await generateImage(prompt);
+    console.log("🎨 Generating image...")
+    const imageUrl = await generateWordImage(finalPrompt)
 
-    return NextResponse.json({
-      image_url: imageUrl,
-      word: word || "unknown",
-    });
+    if (imageUrl) {
+      console.log("✅ Image generation successful")
+      return NextResponse.json({ image_url: imageUrl })
+    } else {
+      console.error("❌ Image generation failed")
+      return NextResponse.json({ error: "Failed to generate image" }, { status: 500 })
+    }
   } catch (error) {
+    console.error("❌ Generate Image API error:", error)
     return NextResponse.json(
       {
         error: "Failed to generate image",
         details: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       },
-      { status: 500 }
-    );
+      { status: 500 },
+    )
   }
 }

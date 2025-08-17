@@ -1,52 +1,24 @@
-import { OpenAI } from "openai";
+import { OpenAI } from "openai"
 
-let openaiConfigured: boolean | null = null;
-
-export function isOpenAIConfigured(): boolean {
-  if (openaiConfigured === null) {
-    openaiConfigured = !!process.env.OPENAI_API_KEY;
-  }
-  return openaiConfigured;
-}
-
-let openaiClient: OpenAI | null = null;
-
-function getOpenAIClient(): OpenAI | null {
-  if (!isOpenAIConfigured()) {
-    return null;
-  }
-
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
-
-  return openaiClient;
-}
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY!,
+})
 
 export async function generateWordDefinition(
   word: string,
-  definition: string,
-  responseType = "friendly"
+  responseType = "friendly",
 ): Promise<{
-  word: string;
-  pronunciation: string;
-  partOfSpeech: string;
-  definition: string;
-  trueMeaningNote: string;
-  simpleExplanation: string;
-  realWorldScenario: string;
-  examples: string[];
-  imagePrompt: string;
+  word: string
+  pronunciation: string
+  partOfSpeech: string
+  definition: string
+  trueMeaningNote: string
+  simpleExplanation: string
+  realWorldScenario: string
+  examples: string[]
+  imagePrompt: string
 }> {
   try {
-    const client = getOpenAIClient();
-
-    if (!client) {
-      throw new Error("OpenAI client not available - API key missing");
-    }
-
     const prompt = `You are an expert educational AI assistant creating richly detailed learning cards for children and teens ages 6–18. For the word "${word}," follow these instructions precisely to ensure maximum clarity, factual accuracy, and pedagogical value:
 
 1. **Word & Pronunciation**
@@ -71,12 +43,13 @@ export async function generateWordDefinition(
 7. **Usage Examples** (2 sentences)
    - Provide two distinct, realistic sentences demonstrating correct use of the word in context.
 
-8. **Image Prompt**
-   - Based directly on the definition: "${definition}".
-   - Create a vivid, cartoon-style scene that clearly illustrates this meaning.
-   - Include: characters or objects, environment, colors/style cues, and key actions or mood.
-   - Ensure the scene makes the abstract meaning easy to understand for children.
-
+8. **Image Prompt** (2–3 sentences)
+   - Create a richly detailed, cartoon-style description for an image-generation API. Include:
+   - Characters or objects ("a curious teen holding…")
+   - The environment ("in a bright science lab with…" or "on a sunny playground with…")
+   - Color/style cues ("soft pastels, bold outlines, playful expressions")
+   - Key actions or mood ("excited discovery, dynamic interaction")
+   - Any symbolic elements that clearly convey the word's concept
 
 IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, backticks, or any other formatting. Just return the raw JSON object:
 
@@ -95,9 +68,9 @@ IMPORTANT: Respond with ONLY valid JSON. Do not include markdown code blocks, ba
   "imagePrompt": "Detailed cartoon-style scene description here."
 }
 
-Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`;
+Ensure every field is precise, maintains the word's full nuance, and is engaging for ages 6–18. Trim any fluff—focus on clarity, accuracy, and usability for both learning and illustration.`
 
-    const completion = await client.chat.completions.create({
+    const completion = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -112,32 +85,28 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       ],
       temperature: 0.7,
       max_tokens: 800,
-    });
+    })
 
-    const response = completion.choices[0]?.message?.content;
+    const response = completion.choices[0]?.message?.content
     if (!response) {
-      throw new Error("No response from OpenAI");
+      throw new Error("No response from OpenAI")
     }
 
-    let cleanedResponse = response.trim();
+    let cleanedResponse = response.trim()
 
     if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```json\s*/, "")
-        .replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse.replace(/^```json\s*/, "").replace(/\s*```$/, "")
     } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
+      cleanedResponse = cleanedResponse.replace(/^```\s*/, "").replace(/\s*```$/, "")
     }
 
-    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim();
+    cleanedResponse = cleanedResponse.replace(/^`+|`+$/g, "").trim()
 
-    let parsed;
+    let parsed
     try {
-      parsed = JSON.parse(cleanedResponse);
+      parsed = JSON.parse(cleanedResponse)
     } catch (parseError) {
-      throw new Error(`Failed to parse OpenAI response: ${parseError}`);
+      throw new Error(`Failed to parse OpenAI response: ${parseError}`)
     }
 
     return {
@@ -150,21 +119,8 @@ Ensure every field is precise, maintains the word's full nuance, and is engaging
       realWorldScenario: parsed.realWorldScenario,
       examples: parsed.examples || [],
       imagePrompt: parsed.imagePrompt,
-    };
+    }
   } catch (error) {
-    return {
-      word,
-      pronunciation: `/${word}/`,
-      partOfSpeech: "noun",
-      definition: `A ${word} is something special that you can learn about!`,
-      trueMeaningNote: `This definition is based on trusted dictionary sources.`,
-      simpleExplanation: `It's a fun way to learn what ${word} really means.`,
-      realWorldScenario: `Imagine encountering "${word}" in a real-world setting.`,
-      examples: [
-        `I learned something new about ${word} today.`,
-        `The ${word} was very interesting to discover.`,
-      ],
-      imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene, with dynamic poses and expressive faces.`,
-    };
+    throw error // Let the calling function handle the fallback
   }
 }

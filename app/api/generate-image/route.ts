@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { generateWordImage } from "@/lib/getimg"
+import { generateImage } from "@/lib/getimg"
 
 export const dynamic = "force-dynamic"
 
@@ -11,17 +11,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Prompt is required and must be a string" }, { status: 400 })
     }
 
-    // Default placeholder
-    let imageUrl = `/placeholder.svg?height=400&width=600&text=${encodeURIComponent(word || "Visual Learning")}`
+    const imageUrl = await generateImage(prompt)
 
-    try {
-      // Try generating with GetImg
-      imageUrl = await generateWordImage(prompt)
-    } catch (err) {
-      console.warn("⚠️ Falling back to placeholder:", err)
-    }
-
-    return NextResponse.json({ image_url: imageUrl })
+    return NextResponse.json({
+      image_url: imageUrl,
+      word: word || "unknown",
+    })
   } catch (error) {
     return NextResponse.json(
       {

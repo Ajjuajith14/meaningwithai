@@ -1,16 +1,26 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+// Lazy initialization to prevent build-time errors
+let resend: Resend | null = null
+
+function getResendClient() {
+  if (!resend && process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY)
+  }
+  return resend
+}
 
 export async function sendMagicLinkEmail(email: string, magicLink: string, name?: string) {
   try {
-    if (!process.env.RESEND_API_KEY) {
-      // console.log("⚠️ Resend API key not found, logging magic link instead")
-      // console.log(`🔗 Magic Link for ${email}: ${magicLink}`)
+    const resendClient = getResendClient()
+
+    if (!resendClient || !process.env.RESEND_API_KEY) {
+      console.log("⚠️ Resend API key not found, logging magic link instead")
+      console.log(`🔗 Magic Link for ${email}: ${magicLink}`)
       return true
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendClient.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "Visualize Dictionary <onboarding@resend.dev>",
       to: [email],
       subject: "🔗 Your Magic Link for Visualize Dictionary",
@@ -86,12 +96,14 @@ export async function sendMagicLinkEmail(email: string, magicLink: string, name?
 
 export async function sendWelcomeEmail(email: string, name: string) {
   try {
-    if (!process.env.RESEND_API_KEY) {
+    const resendClient = getResendClient()
+
+    if (!resendClient || !process.env.RESEND_API_KEY) {
       console.log("⚠️ Resend API key not found, skipping welcome email")
       return true
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await resendClient.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "Visualize Dictionary <onboarding@resend.dev>",
       to: [email],
       subject: "🎉 Welcome to Visualize Dictionary!",

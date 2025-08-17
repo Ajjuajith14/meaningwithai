@@ -3,7 +3,7 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { supabase, isSupabaseConfigured } from "./supabase"
+import { supabase, isSupabaseConfigured} from "./supabase"
 
 interface UserProfile {
   id: string
@@ -25,7 +25,6 @@ interface AuthContextType {
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
-  isConfigured: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -147,7 +146,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     refreshProfile,
-    isConfigured: isSupabaseConfigured,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

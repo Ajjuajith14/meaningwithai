@@ -1,16 +1,16 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient, isSupabaseConfigured } from "@/lib/supabase"
+import { createServerClient } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
-    if (!isSupabaseConfigured) {
-      return NextResponse.json({
-        data: [],
-        message: "Database not configured",
-      })
-    }
+    // if (!isSupabaseConfigured) {
+    //   return NextResponse.json({
+    //     data: [],
+    //     message: "Database not configured",
+    //   })
+    // }
 
     const { searchParams } = request.nextUrl
     const userId = searchParams.get("userId")
@@ -48,12 +48,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    if (!isSupabaseConfigured) {
-      return NextResponse.json({
-        success: false,
-        message: "Database not configured",
-      })
-    }
+    // if (!isSupabaseConfigured) {
+    //   return NextResponse.json({
+    //     success: false,
+    //     message: "Database not configured",
+    //   })
+    // }
 
     const body = await request.json()
     const { userId, word, definition, imageUrl, responseType } = body

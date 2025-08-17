@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient, isSupabaseConfigured } from "@/lib/supabase"
+import { createServerClient } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
 
@@ -13,13 +13,13 @@ export async function POST(request: NextRequest) {
 
     console.log(`💭 New feedback received: ${feedbackType} (${rating}/5 stars)`)
 
-    if (!isSupabaseConfigured) {
-      console.warn("Feedback submitted but database not configured")
-      return NextResponse.json({
-        success: true,
-        message: "Feedback submitted successfully",
-      })
-    }
+    // if (!isSupabaseConfigured) {
+    //   console.warn("Feedback submitted but database not configured")
+    //   return NextResponse.json({
+    //     success: true,
+    //     message: "Feedback submitted successfully",
+    //   })
+    // }
 
     const supabase = createServerClient()
     const clientIP = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "127.0.0.1"

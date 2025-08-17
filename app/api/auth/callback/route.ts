@@ -1,17 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient, isSupabaseConfigured } from "@/lib/supabase"
+import { createServerClient } from "@/lib/supabase"
 
 export const dynamic = "force-dynamic"
 
 export async function GET(request: NextRequest) {
   try {
     // If Supabase is not configured, redirect to home with a message
-    if (!isSupabaseConfigured) {
-      console.warn("Auth callback called but Supabase is not configured")
-      const redirectUrl = new URL("/", request.url)
-      redirectUrl.searchParams.set("message", "Authentication not available")
-      return NextResponse.redirect(redirectUrl)
-    }
+    // if (!isSupabaseConfigured) {
+    //   console.warn("Auth callback called but Supabase is not configured")
+    //   const redirectUrl = new URL("/", request.url)
+    //   redirectUrl.searchParams.set("message", "Authentication not available")
+    //   return NextResponse.redirect(redirectUrl)
+    // }
 
     const supabase = createServerClient()
     const { searchParams } = request.nextUrl

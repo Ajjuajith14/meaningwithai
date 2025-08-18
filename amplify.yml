@@ -51,4 +51,3 @@ applications:
           headers:
             - key: 'Content-Type'
               value: 'text/plain'
-    appRoot: /

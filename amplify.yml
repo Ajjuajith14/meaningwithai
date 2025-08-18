@@ -5,6 +5,10 @@ applications:
         preBuild:
           commands:
             - npm ci
+            - echo "🔍 Checking environment variables..."
+            - echo "GETIMG_API_KEY configured:" $(if [ -n "$GETIMG_API_KEY" ]; then echo "Yes"; else echo "No"; fi)
+            - echo "OPENAI_API_KEY configured:" $(if [ -n "$OPENAI_API_KEY" ]; then echo "Yes"; else echo "No"; fi)
+            - echo "SUPABASE_URL configured:" $(if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "Yes"; else echo "No"; fi)
         build:
           commands:
             - npm run build
@@ -16,6 +20,12 @@ applications:
         paths:
           - node_modules/**/*
           - .next/cache/**/*
+      environment:
+        variables:
+          NODE_ENV: production
+          AMPLIFY_MONOREPO_APP_ROOT: /
+          AMPLIFY_DIFF_DEPLOY: false
+          AMPLIFY_DIFF_DEPLOY_ROOT: /
       customHeaders:
         - pattern: '**/*'
           headers:
@@ -41,3 +51,4 @@ applications:
           headers:
             - key: 'Content-Type'
               value: 'text/plain'
+    appRoot: /

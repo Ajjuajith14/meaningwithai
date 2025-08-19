@@ -5,10 +5,21 @@ applications:
         preBuild:
           commands:
             - npm ci
-            - echo "🔍 Checking environment variables..."
-            - echo "GETIMG_API_KEY configured:" $(if [ -n "$GETIMG_API_KEY" ]; then echo "Yes"; else echo "No"; fi)
-            - echo "OPENAI_API_KEY configured:" $(if [ -n "$OPENAI_API_KEY" ]; then echo "Yes"; else echo "No"; fi)
-            - echo "SUPABASE_URL configured:" $(if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "Yes"; else echo "No"; fi)
+            - echo "🔍 Checking ALL environment variables and secrets..."
+            - echo "--- Environment Variables ---"
+            - echo "GETIMG_API_KEY configured:" $(if [ -n "$GETIMG_API_KEY" ]; then echo "Yes (${#GETIMG_API_KEY} chars)"; else echo "No"; fi)
+            - echo "OPENAI_API_KEY configured:" $(if [ -n "$OPENAI_API_KEY" ]; then echo "Yes (${#OPENAI_API_KEY} chars)"; else echo "No"; fi)
+            - echo "NEXT_PUBLIC_SUPABASE_URL configured:" $(if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "Yes"; else echo "No"; fi)
+            - echo "--- All Environment Variables Starting with NEXT_ ---"
+            - env | grep "^NEXT_" || echo "No NEXT_ variables found"
+            - echo "--- All Environment Variables Starting with GETIMG ---"
+            - env | grep "^GETIMG" || echo "No GETIMG variables found"
+            - echo "--- All Environment Variables Starting with OPENAI ---"
+            - env | grep "^OPENAI" || echo "No OPENAI variables found"
+            - echo "--- Node Version ---"
+            - node --version
+            - echo "--- Build Environment ---"
+            - echo "NODE_ENV: $NODE_ENV"
         build:
           commands:
             - npm run build

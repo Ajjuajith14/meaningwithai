@@ -6,7 +6,11 @@ let openaiClient: OpenAI | null = null
 function getOpenAIClient() {
   if (!openaiClient) {
     const apiKey = process.env.OPENAI_API_KEY
+    
+    // More detailed logging
     console.log(`🔑 OpenAI API Key configured: ${apiKey ? "Yes" : "No"}`)
+    console.log(`🔑 OpenAI API Key length: ${apiKey ? apiKey.length : 0}`)
+    console.log(`🔑 OpenAI API Key starts with: ${apiKey ? apiKey.substring(0, 7) + "..." : "N/A"}`)
 
     if (!apiKey) {
       console.log("⚠️ OpenAI client not available, using fallback")
@@ -25,15 +29,20 @@ function getOpenAIClient() {
 }
 
 export function isOpenAIConfigured(): boolean {
-  return !!process.env.OPENAI_API_KEY
+  const configured = !!process.env.OPENAI_API_KEY
+  console.log(`🔍 isOpenAIConfigured check: ${configured}`)
+  return configured
 }
 
 export async function generateWordDefinition(word: string, responseType = "friendly") {
   console.log(`🤖 Generating definition for word: "${word}"`)
+  console.log(`🔍 Environment check - OPENAI_API_KEY exists: ${!!process.env.OPENAI_API_KEY}`)
 
   const openai = getOpenAIClient()
   if (!openai) {
-    throw new Error("OpenAI not configured")
+    const error = new Error("OpenAI not configured - API key missing or invalid")
+    console.error("❌ OpenAI configuration error:", error.message)
+    throw error
   }
 
   try {
@@ -84,7 +93,7 @@ Example format:
 
     const response = completion.choices[0]?.message?.content
     if (!response) {
-      throw new Error("No response from OpenAI")
+      throw new Error("No response from OpenAI API")
     }
 
     console.log("✅ OpenAI response received, parsing...")
@@ -131,7 +140,20 @@ Example format:
         `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene.`,
     }
   } catch (error) {
-    console.error("❌ OpenAI API error:", error)
-    throw error
+    console.error("❌ OpenAI API error details:", error)
+    
+    // More specific error logging
+    if (error instanceof Error) {
+      console.error("❌ Error name:", error.name)
+      console.error("❌ Error message:", error.message)
+      console.error("❌ Error stack:", error.stack)
+    }
+    
+    // Check if it's an API key issue
+    if (error instanceof Error && error.message.includes('401')) {
+      console.error("❌ AUTHENTICATION ERROR - Check your OpenAI API key")
+    }
+    
+    throw error // Don't catch here, let the API route handle it
   }
 }

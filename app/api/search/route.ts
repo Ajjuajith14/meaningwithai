@@ -6,6 +6,12 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   console.log("🔍 Search API called")
+  
+  // Log environment variables status
+  console.log("🔍 Environment check:")
+  console.log("  - OPENAI_API_KEY exists:", !!process.env.OPENAI_API_KEY)
+  console.log("  - GETIMG_API_KEY exists:", !!process.env.GETIMG_API_KEY)
+  console.log("  - NEXT_PUBLIC_SUPABASE_URL exists:", !!process.env.NEXT_PUBLIC_SUPABASE_URL)
 
   try {
     const { word, responseType = "friendly" } = await request.json()
@@ -17,14 +23,30 @@ export async function POST(request: NextRequest) {
     }
 
     let wordData
+    let openaiError = null
 
     try {
       console.log("🤖 Attempting OpenAI generation...")
       wordData = await generateWordDefinition(word, responseType)
       console.log("✅ OpenAI generation successful")
     } catch (err) {
-      console.warn("⚠️ OpenAI generation failed, using fallback:", err instanceof Error ? err.message : err)
-      wordData = getFallbackWordData(word)
+      openaiError = err
+      console.error("❌ OpenAI generation failed:", err instanceof Error ? err.message : err)
+      
+      // Only use fallback if OpenAI is not configured
+      if (!process.env.OPENAI_API_KEY) {
+        console.warn("⚠️ OpenAI API key not configured, using fallback")
+        wordData = getFallbackWordData(word)
+      } else {
+        // If API key exists but request failed, return error instead of fallback
+        console.error("❌ OpenAI configured but request failed, returning error")
+        return NextResponse.json({
+          error: "OpenAI API request failed",
+          details: err instanceof Error ? err.message : "Unknown error",
+          configured: true,
+          timestamp: new Date().toISOString(),
+        }, { status: 500 })
+      }
     }
 
     // Save search history if Supabase is available
@@ -54,6 +76,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ...wordData,
       image_url: null, // Will be updated by client-side image generation
+      debug: {
+        openaiConfigured: !!process.env.OPENAI_API_KEY,
+        getimgConfigured: !!process.env.GETIMG_API_KEY,
+        usedFallback: !!openaiError,
+        error: openaiError ? (openaiError instanceof Error ? openaiError.message : String(openaiError)) : null
+      }
     })
   } catch (error) {
     console.error("❌ Search API error:", error)
@@ -62,6 +90,10 @@ export async function POST(request: NextRequest) {
         error: "Failed to process search request",
         details: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
+        debug: {
+          openaiConfigured: !!process.env.OPENAI_API_KEY,
+          getimgConfigured: !!process.env.GETIMG_API_KEY,
+        }
       },
       { status: 500 },
     )
@@ -78,7 +110,10 @@ function getFallbackWordData(word: string) {
     trueMeaningNote: "This definition is based on trusted dictionary sources.",
     simpleExplanation: `It's a fun way to learn what ${word} really means.`,
     realWorldScenario: `Imagine encountering "${word}" in a real-world setting.`,
-    examples: [`I learned something new about ${word} today.`, `The ${word} was very interesting to discover.`],
+    examples: [
+      `I learned something new about ${word} today.`, 
+      `The ${word} was very interesting to discover.`
+    ],
     imagePrompt: `A cheerful, cartoon-style illustration showing children or teens engaging with the concept of "${word}" in a bright, colorful scene.`,
   }
 }

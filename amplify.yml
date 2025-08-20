@@ -5,21 +5,10 @@ applications:
         preBuild:
           commands:
             - npm ci
-            - echo "🔍 Checking ALL environment variables and secrets..."
-            - echo "--- Environment Variables ---"
-            - 'echo "GETIMG_API_KEY configured:" $(if [ -n "$GETIMG_API_KEY" ]; then echo "Yes (${#GETIMG_API_KEY} chars)"; else echo "No"; fi)'
-            - 'echo "OPENAI_API_KEY configured:" $(if [ -n "$OPENAI_API_KEY" ]; then echo "Yes (${#OPENAI_API_KEY} chars)"; else echo "No"; fi)'
-            - 'echo "NEXT_PUBLIC_SUPABASE_URL configured:" $(if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "Yes"; else echo "No"; fi)'
-            - echo "--- All Environment Variables Starting with NEXT_ ---"
-            - 'env | grep "^NEXT_" || echo "No NEXT_ variables found"'
-            - echo "--- All Environment Variables Starting with GETIMG ---"
-            - 'env | grep "^GETIMG" || echo "No GETIMG variables found"'
-            - echo "--- All Environment Variables Starting with OPENAI ---"
-            - 'env | grep "^OPENAI" || echo "No OPENAI variables found"'
-            - echo "--- Node Version ---"
-            - node --version
-            - echo "--- Build Environment ---"
-            - 'echo "NODE_ENV: $NODE_ENV"'
+            - echo "Build-time environment check:"
+            - 'echo "GETIMG_API_KEY: ${GETIMG_API_KEY:0:10}...hidden"'
+            - 'echo "OPENAI_API_KEY: ${OPENAI_API_KEY:0:10}...hidden"'
+            - 'echo "NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL"'
         build:
           commands:
             - npm run build
@@ -37,28 +26,8 @@ applications:
           AMPLIFY_MONOREPO_APP_ROOT: /
           AMPLIFY_DIFF_DEPLOY: false
           AMPLIFY_DIFF_DEPLOY_ROOT: /
-      customHeaders:
-        - pattern: '**/*'
-          headers:
-            - key: 'Strict-Transport-Security'
-              value: 'max-age=31536000; includeSubDomains'
-            - key: 'X-Frame-Options'
-              value: 'DENY'
-            - key: 'X-Content-Type-Options'
-              value: 'nosniff'
-            - key: 'Referrer-Policy'
-              value: 'origin-when-cross-origin'
-            - key: 'X-XSS-Protection'
-              value: '1; mode=block'
-        - pattern: '/sitemap.xml'
-          headers:
-            - key: 'Content-Type'
-              value: 'application/xml'
-        - pattern: '/robots.txt'
-          headers:
-            - key: 'Content-Type'
-              value: 'text/plain'
-        - pattern: '/ai.txt'
-          headers:
-            - key: 'Content-Type'
-              value: 'text/plain'
+          _LIVE_UPDATES: '[{"name":"Node.js","pkg":"node","type":"nvm","version":"20"}]'
+          # Runtime environment variables for Next.js API routes
+          OPENAI_API_KEY: $OPENAI_API_KEY
+          GETIMG_API_KEY: $GETIMG_API_KEY
+          NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL

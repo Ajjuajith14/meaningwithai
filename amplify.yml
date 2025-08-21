@@ -5,10 +5,22 @@ applications:
         preBuild:
           commands:
             - npm ci
-            - echo "Build-time environment check:"
-            - 'echo "GETIMG_API_KEY: ${GETIMG_API_KEY:0:10}...hidden"'
-            - 'echo "OPENAI_API_KEY: ${OPENAI_API_KEY:0:10}...hidden"'
-            - 'echo "NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL"'
+            # Write runtime env vars into .env.production for Next.js
+            - echo "Creating .env.production file..."
+            - echo "OPENAI_API_KEY=$OPENAI_API_KEY" >> .env.production
+            - echo "GETIMG_API_KEY=$GETIMG_API_KEY" >> .env.production
+            - echo "HUGGING_FACE_API_KEY=$HUGGING_FACE_API_KEY" >> .env.production
+            - echo "RESEND_API_KEY=$RESEND_API_KEY" >> .env.production
+            - echo "RESEND_FROM_EMAIL=$RESEND_FROM_EMAIL" >> .env.production
+
+            # NEXT_PUBLIC_ vars (exposed to client)
+            - echo "NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL" >> .env.production
+            - echo "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL" >> .env.production
+            - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY" >> .env.production
+            - echo "NEXT_PUBLIC_CLARITY_PROJECT_ID=$NEXT_PUBLIC_CLARITY_PROJECT_ID" >> .env.production
+            - echo "NEXT_PUBLIC_ENABLE_CLARITY_DEV=$NEXT_PUBLIC_ENABLE_CLARITY_DEV" >> .env.production
+
+            - cat .env.production # Debug: check contents (remove in prod)
         build:
           commands:
             - npm run build
@@ -27,7 +39,29 @@ applications:
           AMPLIFY_DIFF_DEPLOY: false
           AMPLIFY_DIFF_DEPLOY_ROOT: /
           _LIVE_UPDATES: '[{"name":"Node.js","pkg":"node","type":"nvm","version":"20"}]'
-          # Runtime environment variables for Next.js API routes
-          OPENAI_API_KEY: $OPENAI_API_KEY
-          GETIMG_API_KEY: $GETIMG_API_KEY
-          NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL
+
+      customHeaders:
+        - pattern: '**/*'
+          headers:
+            - key: 'Strict-Transport-Security'
+              value: 'max-age=31536000; includeSubDomains'
+            - key: 'X-Frame-Options'
+              value: 'DENY'
+            - key: 'X-Content-Type-Options'
+              value: 'nosniff'
+            - key: 'Referrer-Policy'
+              value: 'origin-when-cross-origin'
+            - key: 'X-XSS-Protection'
+              value: '1; mode=block'
+        - pattern: '/sitemap.xml'
+          headers:
+            - key: 'Content-Type'
+              value: 'application/xml'
+        - pattern: '/robots.txt'
+          headers:
+            - key: 'Content-Type'
+              value: 'text/plain'
+        - pattern: '/ai.txt'
+          headers:
+            - key: 'Content-Type'
+              value: 'text/plain'

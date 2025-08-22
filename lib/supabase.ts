@@ -19,12 +19,6 @@ function isValidSupabaseUrl(url: string | undefined): boolean {
 // Check if Supabase is properly configured
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && isValidSupabaseUrl(supabaseUrl))
 
-console.log("🔧 Supabase Configuration Check:")
-console.log("  - URL configured:", !!supabaseUrl)
-console.log("  - Anon key configured:", !!supabaseAnonKey)
-console.log("  - Service key configured:", !!supabaseServiceKey)
-console.log("  - Overall configured:", isSupabaseConfigured)
-
 // Create a mock client for when Supabase is not configured
 const createMockClient = () => ({
   auth: {

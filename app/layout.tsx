@@ -1,11 +1,13 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { AuthProvider } from "@/lib/auth-context"
-import { ClarityScript } from "@/components/analytics/clarity-script"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
+import { ClarityScript } from "@/components/analytics/clarity-script";
+import { Toaster } from "sonner"
 
-const inter = Inter({ subsets: ["latin"] })
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Visualize Dictionary - AI-Powered Visual Learning for Kids",
@@ -31,7 +33,9 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://visualizedictionary.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://visualizedictionary.com"
+  ),
   alternates: {
     canonical: "/",
   },
@@ -74,12 +78,12 @@ export const metadata: Metadata = {
   verification: {
     google: "your-google-verification-code",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
@@ -94,8 +98,29 @@ export default function RootLayout({
       <body className={inter.className}>
         <AuthProvider>
           {children}
+          <Toaster
+            position="top-center"
+            expand={true}
+            richColors={true}
+            closeButton={true}
+            duration={4000}
+            toastOptions={{
+              style: {
+                background: "white",
+                border: "1px solid #e5e7eb",
+                color: "#374151",
+                fontSize: "14px",
+                fontWeight: "500",
+                borderRadius: "12px",
+                padding: "16px",
+                boxShadow:
+                  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+              },
+              className: "font-playful",
+            }}
+          />
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

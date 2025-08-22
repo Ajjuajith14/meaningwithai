@@ -4,23 +4,16 @@ import { generateWordImage } from "@/lib/getimg"
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
-  console.log("🖼️ Generate Image API called")
 
   try {
     const body = await request.json()
-    console.log("📦 Request body:", JSON.stringify(body, null, 2))
 
     const { imagePrompt, prompt, word } = body
 
     // Handle both possible parameter names and convert object to string if needed
     let finalPrompt = imagePrompt || prompt
-
-    console.log("🔍 Raw prompt type:", typeof finalPrompt)
-    console.log("🔍 Raw prompt value:", finalPrompt)
-
     // If imagePrompt is an object, convert it to a string
     if (finalPrompt && typeof finalPrompt === "object") {
-      console.log("🔄 Converting object prompt to string...")
 
       // Extract the key action/mood as the main prompt
       if (finalPrompt.keyActionsOrMood) {
@@ -57,8 +50,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`🎨 Final prompt: "${finalPrompt.substring(0, 100)}..."`)
-    console.log("🎨 Generating image...")
     const imageUrl = await generateWordImage(finalPrompt.trim())
 
     if (imageUrl) {

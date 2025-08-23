@@ -272,7 +272,7 @@ export default function HomePage() {
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
-                <Card className="shadow-xl rounded-3xl border-2 border-blue-200 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <Card className="shadow-xl rounded-3xl border-2 border-blue-200 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
                   <CardHeader className="text-center p-8">
                     <Brain className="w-12 h-12 mx-auto mb-4 text-blue-500" />
                     <CardTitle className="text-xl font-playful text-blue-700">Smart AI Brain</CardTitle>
@@ -283,7 +283,7 @@ export default function HomePage() {
                   </CardHeader>
                 </Card>
 
-                <Card className="shadow-xl rounded-3xl border-2 border-purple-200 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <Card className="shadow-xl rounded-3xl border-2 border-purple-200 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
                   <CardHeader className="text-center p-8">
                     <Palette className="w-12 h-12 mx-auto mb-4 text-purple-500" />
                     <CardTitle className="text-xl font-playful text-purple-700">Beautiful Illustrations</CardTitle>
@@ -294,7 +294,7 @@ export default function HomePage() {
                   </CardHeader>
                 </Card>
 
-                <Card className="shadow-xl rounded-3xl border-2 border-pink-200 hover:shadow-2xl transition-all duration-300 hover:scale-105">
+                <Card className="shadow-xl rounded-3xl border-2 border-pink-200 hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer">
                   <CardHeader className="text-center p-8">
                     <Zap className="w-12 h-12 mx-auto mb-4 text-pink-500" />
                     <CardTitle className="text-xl font-playful text-pink-700">Instant Learning</CardTitle>
@@ -358,7 +358,7 @@ export default function HomePage() {
               </div>
 
               <div className="grid md:grid-cols-3 gap-8">
-                <Card className="text-center p-6 rounded-2xl border-2 border-green-200 bg-green-50">
+                <Card className="text-center p-6 rounded-2xl border-2 border-green-200 bg-green-50 cursor-pointer">
                   <GraduationCap className="w-12 h-12 mx-auto mb-4 text-green-600" />
                   <h3 className="text-lg font-bold font-playful text-green-700 mb-2">Expert-Verified Definitions</h3>
                   <p className="text-green-600 font-playful">
@@ -366,7 +366,7 @@ export default function HomePage() {
                   </p>
                 </Card>
 
-                <Card className="text-center p-6 rounded-2xl border-2 border-blue-200 bg-blue-50">
+                <Card className="text-center p-6 rounded-2xl border-2 border-blue-200 bg-blue-50 cursor-pointer">
                   <BookOpen className="w-12 h-12 mx-auto mb-4 text-blue-600" />
                   <h3 className="text-lg font-bold font-playful text-blue-700 mb-2">Age-Appropriate Content</h3>
                   <p className="text-blue-600 font-playful">
@@ -374,7 +374,7 @@ export default function HomePage() {
                   </p>
                 </Card>
 
-                <Card className="text-center p-6 rounded-2xl border-2 border-purple-200 bg-purple-50">
+                <Card className="text-center p-6 rounded-2xl border-2 border-purple-200 bg-purple-50 cursor-pointer">
                   <Star className="w-12 h-12 mx-auto mb-4 text-purple-600" />
                   <h3 className="text-lg font-bold font-playful text-purple-700 mb-2">Comprehensive Learning</h3>
                   <p className="text-purple-600 font-playful">

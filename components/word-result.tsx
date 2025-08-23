@@ -244,12 +244,12 @@ export function WordResult({
                     key={index}
                     className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-yellow-200"
                   >
-                    <Badge
+                    {/* <Badge
                       variant="outline"
                       className="bg-yellow-200 text-yellow-800 font-playful text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1 flex-shrink-0"
                     >
                       {index + 1}
-                    </Badge>
+                    </Badge> */}
                     <p className="text-base sm:text-lg md:text-xl text-yellow-800 leading-relaxed flex-1">
                       {example}
                     </p>

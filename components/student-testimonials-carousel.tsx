@@ -112,7 +112,7 @@ export function StudentTestimonialsCarousel() {
           {/* Carousel Container */}
           <div className="relative">
             {/* Main Carousel */}
-            <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-100 via-green-100 to-orange-100 p-4 md:p-8">
+            <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-yellow-100 via-green-100 to-orange-100 p-4 md:p-8 cursor-pointer">
               <div
                 className="flex transition-transform duration-500 ease-in-out"
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
@@ -186,16 +186,6 @@ export function StudentTestimonialsCarousel() {
                   aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
-            </div>
-
-            {/* Auto-play indicator */}
-            <div className="flex justify-center mt-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <div
-                  className={`w-2 h-2 rounded-full ${isAutoPlaying ? "bg-green-400 animate-pulse" : "bg-gray-400"}`}
-                />
-                <span>{isAutoPlaying ? "Auto-playing" : "Paused"}</span>
-              </div>
             </div>
           </div>
         </div>

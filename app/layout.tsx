@@ -1,13 +1,9 @@
-import type React from "react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { AuthProvider } from "@/lib/auth-context";
-import { ClarityScript } from "@/components/analytics/clarity-script";
+import type React from "react"
+import type { Metadata } from "next"
+import "./globals.css"
+import { AuthProvider } from "@/lib/auth-context"
 import { Toaster } from "sonner"
-
-
-const inter = Inter({ subsets: ["latin"] });
+import { ClarityScript } from "@/components/analytics/clarity-script"
 
 export const metadata: Metadata = {
   title: "Visualize Dictionary - AI-Powered Visual Learning for Kids",
@@ -33,9 +29,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://visualizedictionary.com"
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://visualizedictionary.com"),
   alternates: {
     canonical: "/",
   },
@@ -78,12 +72,12 @@ export const metadata: Metadata = {
   verification: {
     google: "your-google-verification-code",
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="en">
@@ -93,9 +87,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/site.webmanifest" />
         <meta name="theme-color" content="#ffffff" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <ClarityScript />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <AuthProvider>
           {children}
           <Toaster
@@ -110,11 +106,12 @@ export default function RootLayout({
                 border: "1px solid #e5e7eb",
                 color: "#374151",
                 fontSize: "14px",
-                fontWeight: "500",
+                fontWeight: "400",
                 borderRadius: "12px",
                 padding: "16px",
-                boxShadow:
-                  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                fontFamily:
+                  "ABeeZee, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif",
               },
               className: "font-playful",
             }}
@@ -122,5 +119,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  );
+  )
 }

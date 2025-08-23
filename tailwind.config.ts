@@ -19,7 +19,7 @@ module.exports = {
     extend: {
       ontFamily: {
         sans: [
-          "Inter",
+          "ABeeZee",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
@@ -29,7 +29,7 @@ module.exports = {
           "sans-serif",
         ],
         playful: [
-          "Inter",
+          "ABeeZee",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",

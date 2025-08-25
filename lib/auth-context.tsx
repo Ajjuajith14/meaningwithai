@@ -1,11 +1,14 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, ReactNode, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
 import { supabase, isSupabaseConfigured} from "./supabase"
 
 interface UserProfile {
+  credits: ReactNode
+  phone_verified: React.JSX.Element
+  email_verified: React.JSX.Element
   id: string
   email: string
   full_name?: string
